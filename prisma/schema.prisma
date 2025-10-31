@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Icp {
+  id             String   @id @default(uuid())
+  userId         String   @db.Text
+  domain         String
+  title          String
+  description    String
+  personas       Json
+  company_size   String
+  revenue_range  String
+  industries     String[]
+  regions        String[]
+  funding_stages String[]
+  createdAt      DateTime @default(now())
+
+  qualRuns       QualRun[]
+
+  @@index([userId, createdAt])
+  @@index([domain])
+}
+
+model QualRun {
+  id        String   @id @default(uuid())
+  userId    String   @db.Text
+  icpId     String
+  createdAt DateTime @default(now())
+  domains   String[]
+
+  icp       Icp      @relation(fields: [icpId], references: [id], onDelete: Cascade)
+  results   ProspectResult[]
+
+  @@index([icpId, createdAt])
+  @@index([userId, createdAt])
+}
+
+model ProspectResult {
+  id         String   @id @default(uuid())
+  runId      String
+  domain     String
+  score      Int
+  rationale  String
+  signals    Json
+
+  qualRun    QualRun  @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId])
+  @@index([domain])
+}
