@@ -1,56 +1,88 @@
 'use client';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { supabase } from '@/lib/supabaseClient';
-import { useEffect, useState } from 'react';
 
-export default function Nav() {
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabaseClient';
+import { useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link';
+
+export default function Navbar() {
+  const [user, setUser] = useState<any>(null);
+  const router = useRouter();
   const pathname = usePathname();
-  const [email, setEmail] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setEmail(data.user?.email ?? null);
-    });
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
-      setEmail(session?.user?.email ?? null);
-    });
-    return () => { sub.subscription.unsubscribe(); };
+    // Load current user
+    supabase.auth.getUser().then(({ data }) => setUser(data.user || null));
+
+    // Listen for auth state changes
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) =>
+      setUser(session?.user || null)
+    );
+
+    return () => listener.subscription.unsubscribe();
   }, []);
 
-  const link = (href: string, label: string) => (
-    <Link
-      href={href}
-      className={`px-3 py-2 rounded-xl transition ${pathname === href ? 'bg-white/10' : 'hover:bg-white/5'}`}
-    >
-      {label}
-    </Link>
-  );
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    setUser(null);
+    router.push('/login');
+  }
 
   return (
-    <nav className="w-full flex items-center justify-between py-4">
-      <div className="flex items-center gap-3">
-        <Link href="/" className="font-bold text-lg">AI Qualifier</Link>
-        <div className="hidden md:flex gap-2">
-          {link('/', 'Onboarding')}
-          {link('/icp', 'ICP')}
-          {link('/qualify', 'Qualify')}
-          {link('/results', 'Results')}
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
-        {email ? (
+    <nav className="flex justify-between items-center p-4 border-b border-white/10 bg-black/20 backdrop-blur-md">
+      <div className="flex items-center gap-6">
+        <Link
+          href="/"
+          className="font-bold text-indigo-400 text-lg hover:text-indigo-300"
+        >
+          AI Qualifier
+        </Link>
+
+        {user && (
           <>
-            <span className="text-sm text-white/70">{email}</span>
-            <button
-              onClick={() => supabase.auth.signOut()}
-              className="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20"
+            <Link
+              href="/icp"
+              className={`hover:text-indigo-400 ${
+                pathname === '/icp' ? 'text-indigo-400 font-semibold' : ''
+              }`}
             >
-              Sign out
-            </button>
+              ICP
+            </Link>
+            <Link
+              href="/qualify"
+              className={`hover:text-indigo-400 ${
+                pathname === '/qualify' ? 'text-indigo-400 font-semibold' : ''
+              }`}
+            >
+              Qualify
+            </Link>
+            <Link
+              href="/results"
+              className={`hover:text-indigo-400 ${
+                pathname === '/results' ? 'text-indigo-400 font-semibold' : ''
+              }`}
+            >
+              Results
+            </Link>
           </>
+        )}
+      </div>
+
+      <div>
+        {user ? (
+          <button
+            onClick={handleLogout}
+            className="text-sm bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg"
+          >
+            Sign Out
+          </button>
         ) : (
-          <Link href="/login" className="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20">Sign in</Link>
+          <Link
+            href="/login"
+            className="text-sm bg-indigo-500 hover:bg-indigo-600 px-3 py-1.5 rounded-lg"
+          >
+            Login
+          </Link>
         )}
       </div>
     </nav>

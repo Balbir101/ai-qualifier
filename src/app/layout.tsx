@@ -1,20 +1,30 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import Nav from '@/components/Nav';
+import Navbar from '@/components/Nav';
 
 export const metadata: Metadata = {
-  title: 'AI Qualifier – Supabase + Prisma',
-  description: 'Production-ready prototype with Supabase Auth, Prisma, and OpenAI (optional).',
+  title: 'AI Qualifier',
+  description: 'AI-based ICP and prospect qualification system',
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
-      <body>
-        <main className="min-h-screen max-w-6xl mx-auto p-6">
-          <Nav />
-          {children}
-        </main>
+      <body className="bg-slate-900 text-white min-h-screen flex flex-col">
+        {/* Global Navbar */}
+        <Navbar />
+
+        {/* Page Content */}
+        <main className="flex-1 max-w-5xl mx-auto w-full p-6">{children}</main>
+
+        {/* Footer */}
+        <footer className="text-center text-sm text-white/60 py-4 border-t border-white/10">
+          © 2025 AI Qualifier by Balbir Singh
+        </footer>
       </body>
     </html>
   );
